@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyTorch checkpoints and model weights
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+checkpoints/
+weights/
+saved_models/
+
+# Datasets and raw data
+data/
+datasets/
+*.parquet
+*.arrow
+*.jsonl.gz
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Environment and IDE
+.env
+.venv
+venv/
+ENV/
+.vscode/
+.idea/
+
+# Experiment tracking & logs
+wandb/
+runs/
+logs/
+tensorboard/
+*.log
+
+# Google Colab / Drive
+drive/
+gdrive/
+.colab/
