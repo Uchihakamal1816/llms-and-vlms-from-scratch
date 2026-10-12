@@ -12,6 +12,14 @@ An end-to-end, deep-dive implementation journey of **Large Language Models (LLMs
 
 ---
 
+## 🏛️ System Architecture & Workflow
+
+<p align="center">
+  <img src="assets/architecture_workflow.jpg" alt="LLMs & VLMs from Scratch Architecture" width="100%">
+</p>
+
+---
+
 ## 🗺️ Curriculum & Roadmap
 
 ### 🧠 Part 1: Large Language Models (`llm/`)
