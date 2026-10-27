@@ -47,10 +47,9 @@ This repository is an end-to-end implementation journey building modern **Large 
 ## 📊 3. Implementation Status & Next Milestones
 
 ### Part 1: Large Language Models (`llm/`)
-- [x] **Phase 01: Tokenization (`01_bpe_tokenizer.ipynb`, `llm/superbpe.py`)**
-  - Implemented `get_stats(ids)`, `merge(ids, pair, idx)`, and `BytePairTokenizer` class.
-  - Implemented **`SuperBPETokenizer`**: Two-stage curriculum (Stage 1 subword learning + Stage 2 boundary-relaxed superword learning crossing whitespace), special tokens (`<|endoftext|>`), and JSON save/load.
-  - Implemented standalone `llm/unified_llm.py` providing end-to-end tokenizer + RMSNorm + RoPE + GQA + SwiGLU + TransformerLM.
+- [x] **Phase 01: Tokenization (`01_bpe_tokenizer.ipynb`)**
+  - Implemented `get_stats(ids)`, `merge(ids, pair, idx)`, and `BytePairTokenizer` class (Tasks 1 to 3).
+  - *Note*: Advanced SuperBPE tokenizer and end-to-end unified architecture live on the dedicated `unified-llm` branch (`unified_llm.ipynb`).
 - [ ] **Phase 02: Architecture (`02_transformer_decoder.ipynb`) — 📍 CURRENT ACTIVE MILESTONE**
   - **Task 1: RMSNorm** — $\text{RMSNorm}(x) = \frac{x}{\sqrt{\frac{1}{d}\sum x_i^2 + \epsilon}} \odot \gamma$
   - **Task 2: Rotary Positional Embeddings (RoPE)** — $\theta_i = 10000^{-2(i-1)/d}$, complex rotation on query/key coordinate pairs.
