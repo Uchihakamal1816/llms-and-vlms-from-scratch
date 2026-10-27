@@ -131,17 +131,23 @@ class SuperBPETokenizer:
     def __init__(
         self,
         pattern: str = GPT4_PAT,
-        special_tokens: dict[str, int] | None = None,
+        special_tokens: list[str] | dict[str, int] | None = None,
     ):
         self.pattern = re.compile(pattern)
         self.subword_merges: dict[tuple[int, int], int] = {}
         self.superword_merges: dict[tuple[int, int], int] = {}
         self.merges: dict[tuple[int, int], int] = {}
         self.vocab: dict[int, bytes] = {i: bytes([i]) for i in range(256)}
-        self.special_tokens: dict[str, int] = special_tokens or {}
-        self.inverse_special_tokens: dict[int, str] = {
-            v: k for k, v in self.special_tokens.items()
-        }
+        
+        self.special_tokens: dict[str, int] = {}
+        self.inverse_special_tokens: dict[int, str] = {}
+        if isinstance(special_tokens, dict):
+            self.special_tokens = dict(special_tokens)
+            self.inverse_special_tokens = {v: k for k, v in self.special_tokens.items()}
+        elif isinstance(special_tokens, (list, tuple)):
+            for i, tok in enumerate(special_tokens):
+                self.special_tokens[tok] = 100000 + i
+                self.inverse_special_tokens[100000 + i] = tok
         self._special_pattern: re.Pattern | None = None
         self._update_special_pattern()
 
@@ -155,10 +161,16 @@ class SuperBPETokenizer:
         else:
             self._special_pattern = None
 
-    def register_special_tokens(self, special_tokens: dict[str, int]):
-        """Registers special tokens (e.g. {'<|endoftext|>': 10000})."""
-        self.special_tokens.update(special_tokens)
-        self.inverse_special_tokens = {v: k for k, v in self.special_tokens.items()}
+    def register_special_tokens(self, special_tokens: list[str] | dict[str, int]):
+        """Registers special tokens (e.g. {'<|endoftext|>': 10000} or ['<|endoftext|>'])."""
+        if isinstance(special_tokens, dict):
+            self.special_tokens.update(special_tokens)
+            self.inverse_special_tokens = {v: k for k, v in self.special_tokens.items()}
+        elif isinstance(special_tokens, (list, tuple)):
+            start_id = max(self.inverse_special_tokens.keys(), default=99999) + 1
+            for i, tok in enumerate(special_tokens):
+                self.special_tokens[tok] = start_id + i
+                self.inverse_special_tokens[start_id + i] = tok
         self._update_special_pattern()
 
     def train(self, text: str, vocab_size: int, subword_ratio: float = 0.7):
@@ -167,17 +179,28 @@ class SuperBPETokenizer:
 
         Args:
             text: Training corpus.
-            vocab_size: Target vocabulary size (including 256 byte tokens).
+            vocab_size: Target vocabulary size (including 256 byte tokens and special tokens).
             subword_ratio: Ratio of total learned merges dedicated to Stage 1 (subwords).
         """
         assert vocab_size >= 256, "vocab_size must be >= 256"
-        total_merges = vocab_size - 256
+        num_special = len(self.special_tokens)
+        bpe_vocab_target = vocab_size - num_special
+        assert bpe_vocab_target >= 256, "vocab_size too small for byte alphabet and special tokens"
+
+        total_merges = bpe_vocab_target - 256
         n_subword = int(total_merges * subword_ratio)
         n_superword = total_merges - n_subword
 
         self.vocab = {i: bytes([i]) for i in range(256)}
         self.subword_merges = {}
         self.superword_merges = {}
+
+        # Place special tokens at top of vocab [bpe_vocab_target .. vocab_size - 1]
+        for i, st in enumerate(sorted(self.special_tokens.keys())):
+            st_id = bpe_vocab_target + i
+            self.special_tokens[st] = st_id
+            self.inverse_special_tokens[st_id] = st
+        self._update_special_pattern()
 
         # -----------------------------------------------------------------
         # Stage 1: Subword Learning (chunk-constrained merges)
